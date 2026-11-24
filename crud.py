@@ -1,4 +1,4 @@
-from database import conectar
+from database import connect_db
 
 def criar_midia(
         titulo: str,
@@ -10,7 +10,7 @@ def criar_midia(
         nota: float | None,
         resenha: str,
 ):
-    conn = conectar()
+    conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -25,7 +25,7 @@ def criar_midia(
     conn.close()
 
 def listar_status(status: str, termo: str = " ") -> list:
-        conn = conectar()
+        conn = connect_db()
         cursor = conn.cursor()
 
         if termo.strip():
@@ -46,7 +46,7 @@ def listar_status(status: str, termo: str = " ") -> list:
         return resultados
 
 def buscar_por_id(midia_id: int):
-        conn = conectar()
+        conn = connect_db()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -69,7 +69,7 @@ def atualizar_midia(
         nota: float | None,
         resenha: str,
 ):
-    conn = conectar()
+    conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -84,13 +84,14 @@ def atualizar_midia(
     conn.close()
 
 def deletar_midia(midia_id: int):
-    conn = conectar()
+    conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute("""
     DELETE FROM midias
     WHERE id = ?
-    """, (midia_id,))
+    """, (midia_id,
+    ))
 
     conn.commit()
     conn.close()
