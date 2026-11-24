@@ -7,7 +7,7 @@ from crud import (
     listar_status,
     buscar_por_id,
     atualizar_midia,
-    excluir_midia,
+    deletar_midia,
 )
 
 FORMATOS = ["Livro", "Filme", "Série", "Anime", "Mangá", "HQ", "Desenho", "Outro"]
@@ -22,7 +22,7 @@ class GerenciadorMidiasApp:
         self.root.minsize(1000, 600)
 
         self.midia_selecionada_id: int | None = None
-        self.tabela_por_status = dict[str, ttk.Treeview] = {}
+        self.tabela_por_status: dict[str, ttk.Treeview] = {}
 
         self.contruir_interface()
         self.recarregar_todas_abas()
@@ -38,13 +38,13 @@ class GerenciadorMidiasApp:
         form_frame.pack(side=tk.LEFT, fill=tk.Y, padx = (0, 12))
 
         #Título
-        ttk.Label(form_frame, text = "Título *:").grid(row = 0, column = 0, sticky = "w", padding = (0, 2))
+        ttk.Label(form_frame, text = "Título *:").grid(row = 0, column = 0, sticky = "w", pady = (0, 2))
         self.entry_titulo = ttk.Entry(form_frame, width = 38)
         self.entry_titulo.grid(row = 1, column = 0, columnspan = 2, sticky = "ew", pady = (0, 8))
 
         #Formato & Ano
-        ttk.Label(form_frame, text = "Formato *:").grid(row = 2, column = 0, sticky = "w", padding = (0, 2))
-        ttk.Label(form_frame, text = "Ano:").grid(row = 2, column = 1, sticky = "w", padx = (8, 0), pady = (0, 2))
+        ttk.Label(form_frame, text = "Formato *:").grid(row = 2, column = 0, sticky = "w", pady = (0, 2))
+        ttk.Label(form_frame, text = "Ano *:").grid(row = 2, column = 1, sticky = "w", padx = (8, 0), pady = (0, 2))
 
         self.combo_formato = ttk.Combobox(form_frame, values = FORMATOS, state = "readonly", width = 16)
         self.combo_formato.set(FORMATOS[0])
@@ -53,13 +53,13 @@ class GerenciadorMidiasApp:
         self.entry_ano = ttk.Entry(form_frame, width = 16)
         self.entry_ano.grid(row = 3, column = 1, sticky = "ew", padx = (8, 0), pady = (0, 8))
 
-        #Autor/Diretor
-        ttk.Label(form_frame, text = "Autor/Diretor:").grid(row = 4, column = 0, sticky = "w", padding = (0, 2))
+        #Autor
+        ttk.Label(form_frame, text = "Autor:").grid(row = 4, column = 0, sticky = "w", pady = (0, 2))
         self.entry_autor = ttk.Entry(form_frame, width = 38)
         self.entry_autor.grid(row = 5, column = 0, columnspan = 2, sticky = "ew", pady = (0, 8))
 
         #Status & Nota
-        ttk.Label(form_frame, text = "Status *:").grid(row = 6, column = 0, sticky = "w", padding = (0, 2))
+        ttk.Label(form_frame, text = "Status *:").grid(row = 6, column = 0, sticky = "w", pady = (0, 2))
         ttk.Label(form_frame, text = "Nota:").grid(row = 6, column = 1, sticky = "w", padx = (8, 0), pady = (0, 2))
 
         self.combo_status = ttk.Combobox(form_frame, values = STATUS, state = "readonly", width = 16)
@@ -70,13 +70,13 @@ class GerenciadorMidiasApp:
         self.entry_nota.grid(row = 7, column = 1, sticky = "ew", padx = (8, 0), pady = (0, 8))
 
         #Progresso
-        ttk.Label(form_frame, text = "Progresso (EX: Ep. 5, Cap. 40, Vol. 12): ").grid(
-            row = 8, column = 0, columnspan = 2, sticky = "w", padding = (0, 8))
+        ttk.Label(form_frame, text = "Progresso (EX: Ep. 5, Cap. 40, Vol. 12): ").grid(row = 8, column = 0, columnspan = 2, sticky = "w", pady = (0, 8))
         self.entry_progresso = ttk.Entry(form_frame, width = 38)
-
+        self.entry_progresso.grid(row = 9, column = 0, columnspan = 2, sticky = "ew", pady = (0, 8))
+        
         #Resenha
         ttk.Label(form_frame, text = "Resenha Crítica (Opcional): ").grid(
-            row = 10, column = 0, columnspan = 2, sticky = "w", padding = (0, 2))
+            row = 10, column = 0, columnspan = 2, sticky = "w", pady = (0, 2))
         self.text_resenha = tk.Text(form_frame, width = 38, height = 8, wrap = tk.WORD, font = ("SEGOE UI", 9))
         self.text_resenha.grid(row = 11, column = 0, columnspan = 2, sticky = "nsew", pady = (0, 12))
         form_frame.rowconfigure(11, weight = 1)
@@ -86,11 +86,11 @@ class GerenciadorMidiasApp:
         button_frame.grid(row = 12, column = 0, columnspan = 2, sticky = "ew")
         button_frame.columnconfigure((0, 1), weight = 1)
     
-        self.button_salvar = ttk.Button(button_frame, text = "Criar novo", command = self.criar_midia)
+        self.button_salvar = ttk.Button(button_frame, text = "Criar novo", command = self.salvar_novo)
         self.button_salvar.grid(row = 0, column = 0, sticky = "ew", padx = (0, 4), pady = (0, 6))
 
         self.button_atualizar = ttk.Button(
-            button_frame, text = "Atualizar", command = self.atualizar_midia, state = tk.DISABLED)
+            button_frame, text = "Atualizar", command = self.salvar_edicao, state = tk.DISABLED)
         self.button_atualizar.grid(row = 0, column = 1, sticky = "ew", padx = (4, 0), pady = (0, 6))
 
         self.button_limpar = ttk.Button(button_frame, text="Limpar / Novo", command=self.limpar_formulario)
@@ -119,7 +119,7 @@ class GerenciadorMidiasApp:
         self.notebook = ttk.Notebook(right_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
-        colunas = ("ID", "Título", "Formato", "Ano", "Autor/Diretor", "Status", "Progresso", "Nota", "Resenha", "Atualizado em")
+        colunas = ("ID", "Título", "Formato", "Ano", "Autor", "Status", "Progresso", "Nota", "Resenha", "Atualizado em")
 
         for status in STATUS:
             aba = ttk.Frame(self.notebook, padding = 6)
@@ -130,7 +130,7 @@ class GerenciadorMidiasApp:
             tree.heading ("Título", text = "Título")
             tree.heading ("Formato", text = "Formato")
             tree.heading ("Ano", text = "Ano")
-            tree.heading ("Autor/Diretor", text = "Autor/Diretor")
+            tree.heading ("Autor", text = "Autor")
             tree.heading ("Status", text = "Status")
             tree.heading ("Progresso", text = "Progresso")
             tree.heading ("Nota", text = "Nota")
@@ -141,7 +141,7 @@ class GerenciadorMidiasApp:
             tree.column("Título", width = 220, anchor = "w")
             tree.column("Formato", width = 85, anchor = "center")
             tree.column("Ano", width = 60, anchor = "center")
-            tree.column("Autor/Diretor", width = 150, anchor = "w")
+            tree.column("Autor", width = 150, anchor = "w")
             tree.column("Status", width = 120, anchor = "center")
             tree.column("Progresso", width = 110, anchor = "center")
             tree.column("Nota", width = 60, anchor = "center")
@@ -161,7 +161,7 @@ class GerenciadorMidiasApp:
 
         titulo = self.entry_titulo.get().strip()
         if not titulo:
-            messagebox.showwarning("Erro", "O campo 'Título' é obrigatório.", "Informe o título  da obra.")
+            messagebox.showwarning("Erro", "O campo 'Título' é obrigatório.")
             return None
 
         formato = self.combo_formato.get()
@@ -180,7 +180,7 @@ class GerenciadorMidiasApp:
             if not ano_str.isdigit() or len(ano_str) != 4:
                 messagebox.showerror("Erro", "O campo 'Ano' deve ser um número de 4 dígitos.")
                 return None
-            ano_str = int(ano_str)
+            ano = int(ano_str)
 
         # Validação da nota
         nota_str = self.entry_nota.get().strip()
@@ -202,7 +202,7 @@ class GerenciadorMidiasApp:
             "progresso": progresso,
             "nota": nota,
             "resenha": resenha,
-            "atualizado_em": atualizado_em
+            
         }
 
     def salvar_novo(self):
@@ -225,7 +225,7 @@ class GerenciadorMidiasApp:
         
         atualizar_midia(self.midia_selecionada_id, **dados)
         self.recarregar_todas_abas()
-        self.selecionar_aba_por_status(dados["status"])
+        self._selecionar_aba_por_status(dados["status"])
         self.limpar_formulario()
         messagebox.showinfo("Sucesso", "Mídia atualizada com sucesso!")
        # inicializar_banco()
@@ -236,9 +236,9 @@ class GerenciadorMidiasApp:
 
         confirmar = messagebox.askyesno("Confirmação", "Tem certeza que deseja excluir a mídia selecionada? Esta ação não pode ser desfeita.")
         if confirmar:
-            excluir_midia(self.midia_selecionada_id)
-        self.recarregar_todas_abas()
-        self.limpar_formulario()
+            deletar_midia(self.midia_selecionada_id)
+            self.recarregar_todas_abas()
+            self.limpar_formulario()
 
     def ao_selecionar_item(self, tree: ttk.Treeview):
         selecao = tree.selection()
